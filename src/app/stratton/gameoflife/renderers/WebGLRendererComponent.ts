@@ -138,7 +138,7 @@ export class WebGlRendererComponent implements Stratton.GameOfLife.IRenderer {
         });
     }
 
-    render(state: Int8Array, constraints: Stratton.GameOfLife.IConstraints) {
+    render(state: Int32Array, constraints: Stratton.GameOfLife.IConstraints) {
         if (!this.isInitialized) {
             return;
         }

@@ -26,7 +26,7 @@ declare namespace Stratton.GameOfLife {
 
     export interface IBoardService {
         constraints: IConstraints;
-        readonly state: Int8Array;
+        readonly state: Int32Array;
 
         renderer: IRenderer;
 
@@ -35,12 +35,12 @@ declare namespace Stratton.GameOfLife {
         randomize(): void;
         render(): void;
 
-        loadFromFile(file: File);
+        loadFromFile(file: File): Promise<void>;
     }
 
     export interface IRenderer {
         initialize(constraints: IConstraints);
-        render(state: Int8Array, constraints: IConstraints);
+        render(state: Int32Array, constraints: IConstraints);
     }
 
     export interface IGlslShaderSource {

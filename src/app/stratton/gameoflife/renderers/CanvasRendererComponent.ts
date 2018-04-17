@@ -27,7 +27,7 @@ export class CanvasRendererComponent implements AfterViewInit, Stratton.GameOfLi
         this.imageData = this.scratchContext.createImageData(constraints.cols, constraints.rows);
     }
 
-    render(state: Int8Array, constraints: Stratton.GameOfLife.IConstraints) {
+    render(state: Int32Array, constraints: Stratton.GameOfLife.IConstraints) {
         const scale = constraints.cellSizeInPixels;
         const ctx = this.context;
         ctx.canvas.width = constraints.cols * scale;
@@ -35,11 +35,11 @@ export class CanvasRendererComponent implements AfterViewInit, Stratton.GameOfLi
         const data = this.imageData.data;
         for (let index = 0; index < state.length; index++) {
             const imageIndex = index * 4;
-            const pointState: number = state[index] ? constraints.livingColor : constraints.deathColor;
-            data[imageIndex + 0] = pointState & 0xFF0000;
-            data[imageIndex + 1] = pointState & 0x00FF00;
-            data[imageIndex + 2] = pointState & 0x0000FF;
-            data[imageIndex + 3] = 255;
+            const pointState: number = state[index];
+            data[imageIndex + 0] = (pointState & 0xFF0000) >> 16;
+            data[imageIndex + 1] = (pointState & 0x00FF00) >> 8;
+            data[imageIndex + 2] = (pointState & 0x0000FF);
+            data[imageIndex + 3] = 0x0FF;
         }
 
         this.scratchContext.putImageData(this.imageData, 0, 0);

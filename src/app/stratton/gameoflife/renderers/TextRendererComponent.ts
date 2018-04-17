@@ -15,6 +15,7 @@ export class TextRendererComponent implements Stratton.GameOfLife.IRenderer {
     elementArray: HTMLElement[];
     rows = 0;
     cols = 0;
+    colorDict: { [key: number]: string; } = {};
 
     shouldRebuild(constraints: Stratton.GameOfLife.IConstraints): boolean {
         return constraints.rows !== this.rows || constraints.cols !== this.cols;
@@ -48,6 +49,8 @@ export class TextRendererComponent implements Stratton.GameOfLife.IRenderer {
 
         divStyle.width = (constraints.cols * constraints.cellSizeInPixels) + 'px';
         divStyle.height = (constraints.rows * constraints.cellSizeInPixels) + 'px';
+        divStyle.fontSize = constraints.cellSizeInPixels + 'px';
+        divStyle.lineHeight = constraints.cellSizeInPixels + 'px';
         divStyle.margin = '0px auto';
         divStyle.overflowX = 'hidden';
         divStyle.overflowY = 'hidden';
@@ -58,24 +61,20 @@ export class TextRendererComponent implements Stratton.GameOfLife.IRenderer {
         this.rebuildReferences(constraints);
     }
 
-    render(state: Int8Array, constraints: Stratton.GameOfLife.IConstraints) {
+    render(state: Int32Array, constraints: Stratton.GameOfLife.IConstraints) {
         if (this.shouldRebuild(constraints)) {
             return;
         }
 
-        const div = this.element.nativeElement as HTMLElement;
-        const divStyle = div.style;
-
-        divStyle.fontSize = constraints.cellSizeInPixels + 'px';
-        divStyle.lineHeight = constraints.cellSizeInPixels + 'px';
-
         this.elementArray.forEach((elm, index) => {
-            elm.style.color = this.intToColor(state[index] ? constraints.livingColor : constraints.deathColor);
+            elm.style.color = this.intToColor(state[index]);
         });
     }
 
     private intToColor(num: number) {
-        num += 0x1000000;
-        return '#' + num.toString(16).substr(1, 6);
+        if (!(num in this.colorDict)) {
+            this.colorDict[num] = '#' + (0x1000000 + num).toString(16).substr(1, 6);
+        }
+        return this.colorDict[num];
     }
 }

@@ -19,11 +19,12 @@ import { BoardService } from './boardService';
 export class GameOfLifeComponent implements OnDestroy {
 
     isRunning = false;
+    lastRenderTimestamp: number = null;
     renderer: RendererSelectorComponent;
 
     constructor(
-        //@Inject(InjectToken.IBoardService) private boardService: Stratton.GameOfLife.IBoardService,
-        private boardService: BoardService, 
+        // @Inject(InjectToken.IBoardService) private boardService: Stratton.GameOfLife.IBoardService,
+        private boardService: BoardService,
         @Inject(InjectToken.IGlobalReference) private globalReference: Stratton.IGlobalReference,
         private ngZone: NgZone
     ) {      }
@@ -36,7 +37,7 @@ export class GameOfLifeComponent implements OnDestroy {
             this.boardService.renderer = renderer;
             renderer.initialize(this.boardService.constraints);
             if (initState) {
-               this.renderFrame();
+               this.renderFrame(0);
            }
         });
     }
@@ -83,19 +84,23 @@ export class GameOfLifeComponent implements OnDestroy {
 
     public loadFile(file: File) {
         console.log(file);
-        this.boardService.loadFromFile(file);
+        this.boardService
+            .loadFromFile(file)
+            .then(() => this.boardService.render());
     }
 
-    private renderFrame(): void {
+    private renderFrame(timeStamp): void {
         if (this.isRunning) {
             this.boardService.tick();
         }
 
-       this.ngZone.run(() => this.boardService.render());
-
-       this.globalReference.setTimeout(() => {
-            this.globalReference.requestAnimationFrame(() => this.renderFrame());
-       }, this.constraintModel.frameDelay);
+        if (this.lastRenderTimestamp === null) {
+            this.lastRenderTimestamp = timeStamp;
+        } else if (timeStamp - this.lastRenderTimestamp > this.constraintModel.frameDelay) {
+            this.lastRenderTimestamp = timeStamp;
+            this.ngZone.run(() => this.boardService.render());
+        }
+        this.globalReference.requestAnimationFrame((t) => this.renderFrame(t));
     }
 }
 
