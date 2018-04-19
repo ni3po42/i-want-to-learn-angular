@@ -86,7 +86,10 @@ export class GameOfLifeComponent implements OnDestroy {
         console.log(file);
         this.boardService
             .loadFromFile(file)
-            .then(() => this.boardService.render());
+            .then(() => {
+                this.boardService.renderer.initialize(this.boardService.constraints);
+                this.boardService.render();
+            });
     }
 
     private renderFrame(timeStamp): void {

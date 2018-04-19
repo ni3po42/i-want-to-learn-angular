@@ -28,10 +28,11 @@ import { HttpClientModule } from '@angular/common/http';
 @NgModule({
     imports : [RouterModule, FormsModule, CommonModule, HttpClientModule],
     declarations: [
-        StrattonComponent , 
+        StrattonComponent ,
         GameOfLifeComponent , CanvasRendererComponent,
         TextRendererComponent, WebGlRendererComponent, MathDirective,
-       WebGlCanvasDirective, WebGlObjectDirective, GlslShaderDirective, WebGlCameraDirective, DropFileDirective,RendererSelectorComponent
+       WebGlCanvasDirective, WebGlObjectDirective, GlslShaderDirective, WebGlCameraDirective, DropFileDirective,
+       RendererSelectorComponent
      ]  ,
      providers: [
          {
@@ -40,11 +41,11 @@ import { HttpClientModule } from '@angular/common/http';
          }
          ,
          {
-             //provide: InjectToken.IBoardService,
+             // provide: InjectToken.IBoardService,
              provide: BoardService,
              useClass: BoardService
-             //useFactory: (globalReference: Stratton.IGlobalReference) => new BoardService(globalReference),
-             //deps: [InjectToken.IGlobalReference]
+             // useFactory: (globalReference: Stratton.IGlobalReference) => new BoardService(globalReference),
+             // deps: [InjectToken.IGlobalReference]
          }
         ]
 })
