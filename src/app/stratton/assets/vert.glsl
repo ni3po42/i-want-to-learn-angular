@@ -5,6 +5,8 @@ uniform mat4 uNormalMatrix;
 uniform mat4 uModelViewMatrix;
 uniform mat4 uProjectionMatrix;
 
+uniform vec3 uMaterial;
+
 varying highp vec3 vLighting;
 
 void main(void) {
@@ -18,5 +20,5 @@ void main(void) {
     highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
 
     highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
-    vLighting = ambientLight + (directionalLightColor * directional);
+    vLighting = (ambientLight + (directionalLightColor * directional)) * uMaterial;
 }

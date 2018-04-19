@@ -177,15 +177,22 @@ export class WebGlRendererComponent implements Stratton.GameOfLife.IRenderer {
 
         const currentModelView = mat4.create();
         for (let i = 0; i < state.length; i++) {
-            if (state[i]) {
+            if (state[i] !== constraints.deathColor) {
                 const x = (i % constraints.cols) - constraints.cols / 2;
                 const y = -((i / constraints.cols | 0) - constraints.rows / 2);
+                const color = state[i];
 
                 mat4.translate(currentModelView, viewMatrix, [x, y, 0.0]);
                 this.gl.uniformMatrix4fv(
                     this.uniformLocations.modelViewMatrix,
                     false,
                     currentModelView);
+                this.gl.uniform3fv(this.uniformLocations.material, [
+                    ((color & 0xFF0000) >> 16) / 256,
+                    ((color & 0x00FF00) >> 8)  / 256,
+                    (color & 0x0000FF) / 256
+                ]);
+
                 this.cube.bind(this.attributes);
                 this.cube.draw();
             }
