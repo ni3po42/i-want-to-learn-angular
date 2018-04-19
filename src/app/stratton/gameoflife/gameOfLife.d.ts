@@ -81,6 +81,7 @@ declare namespace Stratton.GameOfLife {
         projectionMatrix: WebGLUniformLocation;
         modelViewMatrix: WebGLUniformLocation;
         normalMatrix: WebGLUniformLocation;
+        material: WebGLUniformLocation;
     }
 }
 

@@ -214,7 +214,8 @@ export class WebGlRendererComponent implements Stratton.GameOfLife.IRenderer {
         this.uniformLocations = {
             projectionMatrix : this.gl.getUniformLocation(this.program, 'uProjectionMatrix'),
             modelViewMatrix : this.gl.getUniformLocation(this.program, 'uModelViewMatrix'),
-            normalMatrix : this.gl.getUniformLocation(this.program, 'uNormalMatrix')
+            normalMatrix : this.gl.getUniformLocation(this.program, 'uNormalMatrix'),
+            material: this.gl.getUniformLocation(this.program, 'uMaterial')
         };
     }
 }
