@@ -83,5 +83,17 @@ declare namespace Stratton.GameOfLife {
         normalMatrix: WebGLUniformLocation;
         material: WebGLUniformLocation;
     }
+
+    export interface DedicatedWorkerGlobalScope extends WindowBase64, WindowTimers {
+        readonly name: string;
+        readonly self: DedicatedWorkerGlobalScope;
+        readonly location: Location;
+        readonly navigator: Navigator;
+        onmessage: (event: MessageEvent) => boolean;
+        onmessageerror: (event: MessageEvent) => boolean;
+        close: () => void;
+        postMessage: (message: any, transferList?: any[]) => void;
+        importScripts: (...args: string[]) => void;
+    }
 }
 

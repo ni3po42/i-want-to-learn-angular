@@ -1,6 +1,8 @@
 /* tslint:disable:no-bitwise */
 import { Injectable, Inject } from '@angular/core';
 import { InjectToken} from './gameOfLife.injection';
+import { WebWorkerHost } from './webWorkerHost';
+import { ExampleActivity } from './exampleActivity';
 
 @Injectable()
 export class BoardService implements Stratton.GameOfLife.IBoardService {
@@ -9,6 +11,9 @@ export class BoardService implements Stratton.GameOfLife.IBoardService {
     renderer: Stratton.GameOfLife.IRenderer;
     statebuffer: Int32Array[];
     bufferInUse = 0;
+
+
+    doSomethingWorker = new WebWorkerHost(ExampleActivity);
 
     readonly neighbours: Stratton.GameOfLife.IPoint[] = [
         {x: -1, y: -1}, {x:  0, y: -1}, {x:  1, y: -1},
@@ -26,6 +31,17 @@ export class BoardService implements Stratton.GameOfLife.IBoardService {
             deathColor: 0x000000,
             frameDelay: 50
         };
+
+        this.doSomethingWorker
+            .when<number>(t => t.doSomething)
+            .subscribe(val => {
+                console.log(val);
+            });
+
+        this.doSomethingWorker
+            .onMessage.subscribe(event => {
+                console.log('async! ' + event.data);
+            });
 
         this.reset();
     }
@@ -51,6 +67,7 @@ export class BoardService implements Stratton.GameOfLife.IBoardService {
             const randomIndex = Math.random() * this.dataSize;
             this.state[randomIndex | 0] = this.constraints.livingColor;
         }
+        this.doSomethingWorker.proxy.doSomething(6);
     }
 
     private calculateCellState(buffer: Int32Array, index: number): number {
