@@ -89,11 +89,11 @@ declare namespace Stratton.GameOfLife {
         readonly self: DedicatedWorkerGlobalScope;
         readonly location: Location;
         readonly navigator: Navigator;
-        onmessage: (event: MessageEvent) => boolean;
-        onmessageerror: (event: MessageEvent) => boolean;
-        close: () => void;
-        postMessage: (message: any, transferList?: any[]) => void;
-        importScripts: (...args: string[]) => void;
+        //onmessage: (event: MessageEvent) => boolean;
+        //onmessageerror: (event: MessageEvent) => boolean;
+        //close: () => void;
+        //postMessage: (message: any, transferList?: any[]) => void;
+        //importScripts: (...args: string[]) => void;
     }
 }
 

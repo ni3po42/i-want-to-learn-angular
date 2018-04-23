@@ -7,6 +7,9 @@ import { RendererSelectorComponent, GameOfLifeRendererEnum } from './renderers/R
 
 import { InjectToken} from './gameOfLife.injection';
 
+import { WebWorkerHost } from './webWorkerHost';
+import { ExampleActivity } from './exampleActivity';
+
 //
 import { BoardService } from './boardService';
 //
@@ -22,12 +25,27 @@ export class GameOfLifeComponent implements OnDestroy {
     lastRenderTimestamp: number = null;
     renderer: RendererSelectorComponent;
 
+    doSomethingWorker = new WebWorkerHost(ExampleActivity);
+
     constructor(
         // @Inject(InjectToken.IBoardService) private boardService: Stratton.GameOfLife.IBoardService,
         private boardService: BoardService,
         @Inject(InjectToken.IGlobalReference) private globalReference: Stratton.IGlobalReference,
         private ngZone: NgZone
-    ) {      }
+    ) {
+
+        this.doSomethingWorker
+            .when<number>(t => t.doSomething)
+            .subscribe(val => {
+                console.log(val);
+            });
+
+        this.doSomethingWorker
+            .when<number>(t => t.asyncCounter)
+            .subscribe(val => {
+                console.log('async! ' + val);
+            });
+       }
 
     @ViewChild(RendererSelectorComponent)
     set rendererSelector(component: RendererSelectorComponent) {
@@ -81,6 +99,11 @@ export class GameOfLifeComponent implements OnDestroy {
         this.boardService.reset();
         this.boardService.randomize();
     }
+
+public worker(): void {
+    this.doSomethingWorker.proxy.doSomething(6);
+    this.doSomethingWorker.proxy.asyncCounter = 10;
+}
 
     public loadFile(file: File) {
         console.log(file);

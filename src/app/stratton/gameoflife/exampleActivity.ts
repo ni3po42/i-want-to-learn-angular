@@ -2,7 +2,6 @@ export class ExampleActivity {
     constructor(context: Stratton.GameOfLife.DedicatedWorkerGlobalScope) {
         context.setInterval(() => {
             this.asyncCounter++;
-            context.postMessage(this.asyncCounter);
         }, 1000);
     }
 
