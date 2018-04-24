@@ -23,7 +23,5 @@
     <button (click)="randomize()" [disabled]="isRunning">?</button>
     <button (click)="isRunning ? stopGame() : startGame()">{{isRunning ? '||' : '>'}}</button>
 
-    <button (click)="worker()">worker</button>
-
 </fieldset>
 <app-gameoflife-renderselector dropFile (fileDrop)="loadFile($event)" title="Drag and drop BMP files to load state!"></app-gameoflife-renderselector>
