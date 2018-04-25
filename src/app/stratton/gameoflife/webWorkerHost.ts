@@ -8,7 +8,7 @@ export class WebWorkerHost<T extends object> {
     private workerProxyHandler: ProxyHandler<any>;
     private addListenerProxyHandler: ProxyHandler<any>;
 
-    readonly proxy: T;
+    private readonly proxy: T;
     private addListenerProxy: T;
 
     private readonly workerProxyMethodDictionary: {[methodName: string]: (...args: any[]) => any};
@@ -47,7 +47,11 @@ export class WebWorkerHost<T extends object> {
                             context.postMessage({member:name, value: val});
                         } else if (!disablePropEmit) {
                             disablePropEmit = true;
-                            kernel[name] = args[0];
+                            if (args.length > 0){
+                                kernel[name] = args[0];
+                            } else {
+                                context.postMessage({member:name, value: val});
+                            }
                             disablePropEmit = false;
                         }
                     }
@@ -114,5 +118,19 @@ export class WebWorkerHost<T extends object> {
 
     when<TR>(lambda: (target: T) => any): Observable<TR> {
         return lambda(this.addListenerProxy) as Observable<TR>;
+    }
+
+    call<TR>(lambda: (target: T) => any): Promise<TR> {
+        return new Promise(resolve => {
+            const observable = lambda(this.proxy) as Observable<TR>;
+            const subscriber = observable.subscribe(next => {
+                resolve(next);
+                subscriber.unsubscribe();
+            });
+        });
+    }
+
+    set(lambda: (target: T) => any): void {
+        lambda(this.proxy);
     }
 }

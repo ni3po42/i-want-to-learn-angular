@@ -101,4 +101,8 @@ export class BoundedGridCalculator {
     get state(): Int32Array {
         return this.statebuffer[this.bufferInUse];
     }
+
+    set state(newState: Int32Array) {
+// do something
+    }
 }
