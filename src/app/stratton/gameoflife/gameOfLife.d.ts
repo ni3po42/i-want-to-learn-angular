@@ -11,23 +11,22 @@ declare namespace Stratton.GameOfLife {
         y: number;
     }
 
-    export interface IConstraints {
+    export interface IGridContraints {
         rows: number;
         cols: number;
 
-        cellSizeInPixels: number;
         isTorus: boolean;
 
         livingColor: number,
-        deathColor: number,
+        deathColor: number
+    }
 
+    export interface IConstraints {       
         frameDelay: number
     }
 
     export interface IBoardService {
         constraints: IConstraints;
-        readonly state: Int32Array;
-
         renderer: IRenderer;
 
         reset(): void;
