@@ -62,7 +62,7 @@ export class BoardService implements Stratton.GameOfLife.IBoardService {
                             const color = (data[n] << 16) | (data[n + 1] << 8) | data[n + 2];
                             state[n / 4 | 0] = color;
                         }
-                        this.gridCalculator.set(c => c.state = state);
+                        this.gridCalculator.set(c => c.state, state);
                         resolve();
                     });
                 

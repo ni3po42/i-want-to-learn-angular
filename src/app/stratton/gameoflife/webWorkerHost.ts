@@ -49,9 +49,8 @@ export class WebWorkerHost<T extends object> {
                             disablePropEmit = true;
                             if (args.length > 0){
                                 kernel[name] = args[0];
-                            } else {
-                                context.postMessage({member:name, value: val});
                             }
+                            context.postMessage({member:name, value: kernel[name]});
                             disablePropEmit = false;
                         }
                     }
@@ -122,15 +121,23 @@ export class WebWorkerHost<T extends object> {
 
     call<TR>(lambda: (target: T) => any): Promise<TR> {
         return new Promise(resolve => {
-            const observable = lambda(this.proxy) as Observable<TR>;
+            const observable = lambda(this.addListenerProxy) as Observable<TR>;
             const subscriber = observable.subscribe(next => {
                 resolve(next);
                 subscriber.unsubscribe();
             });
+            lambda(this.proxy);
         });
     }
 
-    set(lambda: (target: T) => any): void {
-        lambda(this.proxy);
+    set<TR>(lambda: (target: T) => any, value: TR): Promise<TR> {
+        return new Promise(resolve => {
+            const observable = lambda(this.addListenerProxy) as Observable<TR>;
+            const subscriber = observable.subscribe(next => {
+                resolve(next);
+                subscriber.unsubscribe();
+            });
+            lambda(this.proxy)(value);
+        });
     }
 }
