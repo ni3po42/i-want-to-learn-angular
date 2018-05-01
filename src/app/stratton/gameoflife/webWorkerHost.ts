@@ -102,9 +102,7 @@ export class WebWorkerHost<T extends object> {
 
         this.addListenerProxyHandler = {
             get: (unusedTarget, member) => {
-                return new Observable<any>(observe => {
-                    this.observerDictionary[member] = observe;
-                });
+                return () => new Observable<any>(ob => { this.observerDictionary[member] = ob; });
             }
         };
         this.proxy = new Proxy<T>({} as T, this.workerProxyHandler);
@@ -115,29 +113,29 @@ export class WebWorkerHost<T extends object> {
         this.worker.terminate();
     }
 
-    when<TR>(lambda: (target: T) => any): Observable<TR> {
-        return lambda(this.addListenerProxy) as Observable<TR>;
+    when<TR>(lambda: (target?: T) => (...args: any[]) => TR): Observable<TR> {
+        return lambda.call(this.addListenerProxy, this.addListenerProxy)() as Observable<TR>;
     }
 
-    call<TR>(lambda: (target: T) => any): Promise<TR> {
+    call<TR>(lambda: (target?: T) => TR): Promise<TR> {
         return new Promise(resolve => {
-            const observable = lambda(this.addListenerProxy) as Observable<TR>;
+            const observable = lambda.call(this.addListenerProxy, this.addListenerProxy) as Observable<TR>;
             const subscriber = observable.subscribe(next => {
                 resolve(next);
                 subscriber.unsubscribe();
             });
-            lambda(this.proxy);
+            lambda.call(this.proxy, this.proxy);
         });
     }
 
-    set<TR>(lambda: (target: T) => any, value: TR): Promise<TR> {
+    set<TR>(lambda: (target: T) => TR, value: TR): Promise<TR> {
         return new Promise(resolve => {
-            const observable = lambda(this.addListenerProxy) as Observable<TR>;
+            const observable = lambda.call(this.addListenerProxy, this.addListenerProxy) as Observable<TR>;
             const subscriber = observable.subscribe(next => {
                 resolve(next);
                 subscriber.unsubscribe();
             });
-            lambda(this.proxy)(value);
+            lambda.call(this.proxy, this.proxy)(value);
         });
     }
 }

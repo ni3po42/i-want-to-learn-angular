@@ -30,7 +30,6 @@ declare namespace Stratton.GameOfLife {
         renderer: IRenderer;
 
         reset(): void;
-        tick(): void;
         randomize(): void;
         render(): void;
 

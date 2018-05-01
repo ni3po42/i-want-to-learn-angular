@@ -103,6 +103,7 @@ export class BoundedGridCalculator {
     }
 
     set state(newState: Int32Array) {
-// do something
+        this.reset();
+        this.statebuffer[this.bufferInUse] = newState;
     }
 }

@@ -21,20 +21,24 @@ export class BoardService implements Stratton.GameOfLife.IBoardService {
     }
 
     reset(): void {
-
-    }
-
-    tick(): void {
-
+        this.gridCalculator
+            .call(x => x.reset)
+            .then(() => this.render());
     }
 
     randomize(): void {
-
+        this.gridCalculator
+            .call(x => x.randomize)
+            .then(() => this.render());
     }
 
     render(): void {
         if (this.renderer) {
-            this.renderer.render(this.state, this.constraints);
+            this.gridCalculator
+                .call(x => x.state)
+                .then((state: Int32Array) => {
+                    this.renderer.render(state, this.constraints);
+                });
         }
     }
 
@@ -55,22 +59,22 @@ export class BoardService implements Stratton.GameOfLife.IBoardService {
                 const imageData = context.getImageData(0, 0, image.width, image.height);
 
                 this.gridCalculator
-                    .call(c => c.state)
+                    .call(c => c.constraints)
+                    .then((constraints: Stratton.GameOfLife.IGridContraints) => {
+                        constraints.rows = image.height;
+                        constraints.cols = image.width;
+                        return this.gridCalculator.call(c => c.state);
+                    })
                     .then((state: Int32Array) => {
                         for (let n = 0; n < imageData.data.length; n += 4) {
                             const data = imageData.data;
                             const color = (data[n] << 16) | (data[n + 1] << 8) | data[n + 2];
                             state[n / 4 | 0] = color;
                         }
-                        this.gridCalculator.set(c => c.state, state);
-                        resolve();
-                    });
-                
-                this.constraints.rows = image.height;
-                this.constraints.cols = image.width;
-                this.reset();
-
-                
+                        return this.gridCalculator.set(c => c.state, state);
+                    })
+                    .then(() => this.gridCalculator.call(x => x.reset()))
+                    .then(() => resolve());
             };
             image.onerror = (evt) => {
                 reject(evt);
