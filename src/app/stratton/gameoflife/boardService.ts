@@ -22,13 +22,13 @@ export class BoardService implements Stratton.GameOfLife.IBoardService {
 
     reset(): void {
         this.gridCalculator
-            .call(x => x.reset)
+            .call(x => x.reset())
             .then(() => this.render());
     }
 
     randomize(): void {
         this.gridCalculator
-            .call(x => x.randomize)
+            .call(x => x.randomize())
             .then(() => this.render());
     }
 
@@ -60,11 +60,15 @@ export class BoardService implements Stratton.GameOfLife.IBoardService {
 
                 this.gridCalculator
                     .call(c => c.constraints)
-                    .then((constraints: Stratton.GameOfLife.IGridContraints) => {
-                        constraints.rows = image.height;
-                        constraints.cols = image.width;
-                        return this.gridCalculator.call(c => c.state);
-                    })
+                    .then((constraints: Stratton.GameOfLife.IGridContraints) =>
+                    this.gridCalculator.set<Stratton.GameOfLife.IGridContraints>(c => c.constraints, {
+                            cols : image.width,
+                            rows : image.height,
+                            deathColor : constraints.deathColor,
+                            livingColor : constraints.livingColor,
+                            isTorus : constraints.isTorus
+                        }))
+                    .then(() => this.gridCalculator.call(c => c.state))
                     .then((state: Int32Array) => {
                         for (let n = 0; n < imageData.data.length; n += 4) {
                             const data = imageData.data;
