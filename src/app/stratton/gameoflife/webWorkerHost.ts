@@ -8,7 +8,7 @@ export class WebWorkerHost<T extends object> {
     private workerProxyHandler: ProxyHandler<any>;
     private addListenerProxyHandler: ProxyHandler<any>;
 
-    private readonly proxy: T;
+    readonly proxy: T;
     private addListenerProxy: T;
 
     private readonly workerProxyMethodDictionary: {[methodName: string]: (...args: any[]) => any};
@@ -44,7 +44,13 @@ export class WebWorkerHost<T extends object> {
                         var args = e.data.slice(1);
                         if (kernel[name] && typeof kernel[name] === 'function' && !disablePropEmit) {
                             var val = kernel[name].apply(kernel, args);
-                            context.postMessage({member:name, value: val});
+                            if (val && val.then && val.catch && val.finally){
+                                val.then(function(v){
+                                    context.postMessage({member:name, value: v});
+                                });
+                            } else {
+                                context.postMessage({member:name, value: val});
+                            }
                         } else if (!disablePropEmit) {
                             disablePropEmit = true;
                             if (args.length > 0){
@@ -64,8 +70,12 @@ export class WebWorkerHost<T extends object> {
         this.worker = new Worker(blobUrl);
 
         this.worker.onmessage = (e) => {
-            if (e && e.data && e.data.member && e.data.member in this.observerDictionary) {
-                this.observerDictionary[e.data.member].next(e.data.value);
+            if (e && e.data && e.data.member) {
+                if (e.data.member in this.observerDictionary) {
+                    this.observerDictionary[e.data.member].next(e.data.value);
+                } else if (e.data.member in this.observerDictionary) {
+
+                }
             }
         };
 
@@ -115,27 +125,5 @@ export class WebWorkerHost<T extends object> {
 
     when<TR>(lambda: (target?: T) => (...args: any[]) => TR): Observable<TR> {
         return lambda.call(this.addListenerProxy, this.addListenerProxy)() as Observable<TR>;
-    }
-
-    call<TR>(lambda: (target?: T) => TR): Promise<TR> {
-        return new Promise(resolve => {
-            const observable = lambda.call(this.addListenerProxy, this.addListenerProxy) as Observable<TR>;
-            const subscriber = observable.subscribe(next => {
-                resolve(next);
-                subscriber.unsubscribe();
-            });
-            lambda.call(this.proxy, this.proxy);
-        });
-    }
-
-    set<TR>(lambda: (target: T) => TR, value: TR): Promise<TR> {
-        return new Promise(resolve => {
-            const observable = lambda.call(this.addListenerProxy, this.addListenerProxy) as Observable<TR>;
-            const subscriber = observable.subscribe(next => {
-                resolve(next);
-                subscriber.unsubscribe();
-            });
-            lambda.call(this.proxy, this.proxy)(value);
-        });
     }
 }

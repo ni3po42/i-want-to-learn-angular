@@ -17,12 +17,16 @@ declare namespace Stratton.GameOfLife {
 
         isTorus: boolean;
 
-        livingColor: number,
-        deathColor: number
+        livingColor: number;
+        deathColor: number;
     }
 
     export interface IConstraints {       
-        frameDelay: number
+        frameDelay: number;
+        isTorus: boolean;
+
+        livingColor: number;
+        deathColor: number;
     }
 
     export interface IBoardService {

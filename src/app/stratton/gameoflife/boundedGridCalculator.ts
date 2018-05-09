@@ -3,18 +3,18 @@
 export class BoundedGridCalculator {
     constructor() {   }
 
-    constraints: Stratton.GameOfLife.IGridContraints;
+    private constraints: Stratton.GameOfLife.IGridContraints;
     private statebuffer: Int32Array[];
     private bufferInUse = 0;
     private generation: number;
 
     readonly neighbours: Stratton.GameOfLife.IPoint[] = [
         {x: -1, y: -1}, {x:  0, y: -1}, {x:  1, y: -1},
-        {x: -1, y:  0},               , {x:  1, y:  0},
+        {x: -1, y:  0},                 {x:  1, y:  0},
         {x: -1, y:  1}, {x:  0, y:  1}, {x:  1, y:  1}
     ];
 
-    tick(): void {
+    async tick() {
         const nextBuffer = (this.bufferInUse + 1) % 2;
         const source = this.statebuffer[this.bufferInUse];
         const destination = this.statebuffer[nextBuffer];
@@ -26,15 +26,32 @@ export class BoundedGridCalculator {
         this.generation++;
     }
 
-    reset(): void {
+    async reset() {
         this.statebuffer = [new Int32Array(this.dataSize), new Int32Array(this.dataSize)];
     }
 
-    randomize(): void {
+    async randomize() {
         for (let n = 0; n < this.dataSize * .3; n++) {
             const randomIndex = Math.random() * this.dataSize;
-            this.state[randomIndex | 0] = this.constraints.livingColor;
+            this.statebuffer[this.bufferInUse][randomIndex | 0] = this.constraints.livingColor;
         }
+    }
+
+    async getState() {
+        return this.statebuffer[this.bufferInUse];
+    }
+
+    async setState(newState: Int32Array) {
+        await this.reset();
+        this.statebuffer[this.bufferInUse] = newState;
+    }
+
+    async getConstraints() {
+        return this.constraints;
+    }
+
+    async setConstraints(newConstraints: Stratton.GameOfLife.IGridContraints) {
+        this.constraints = newConstraints;
     }
 
     private calculateCellState(buffer: Int32Array, index: number): number {
@@ -94,16 +111,7 @@ export class BoundedGridCalculator {
         };
     }
 
-    get dataSize(): number {
+    private get dataSize(): number {
         return this.constraints.cols * this.constraints.rows;
-    }
-
-    get state(): Int32Array {
-        return this.statebuffer[this.bufferInUse];
-    }
-
-    set state(newState: Int32Array) {
-        this.reset();
-        this.statebuffer[this.bufferInUse] = newState;
     }
 }
