@@ -17,11 +17,11 @@ export class TextRendererComponent implements Stratton.GameOfLife.IRenderer {
     cols = 0;
     colorDict: { [key: number]: string; } = {};
 
-    shouldRebuild(constraints: Stratton.GameOfLife.IConstraints): boolean {
+    shouldRebuild(constraints: Stratton.GameOfLife.IGridContraints): boolean {
         return constraints.rows !== this.rows || constraints.cols !== this.cols;
     }
 
-    rebuildReferences(constraints: Stratton.GameOfLife.IConstraints) {
+    rebuildReferences(constraints: Stratton.GameOfLife.IGridContraints) {
         this.rows = constraints.rows;
         this.cols = constraints.cols;
 
@@ -47,21 +47,21 @@ export class TextRendererComponent implements Stratton.GameOfLife.IRenderer {
             div.appendChild(row);
         }
 
-        divStyle.width = (constraints.cols * constraints.cellSizeInPixels) + 'px';
-        divStyle.height = (constraints.rows * constraints.cellSizeInPixels) + 'px';
-        divStyle.fontSize = constraints.cellSizeInPixels + 'px';
-        divStyle.lineHeight = constraints.cellSizeInPixels + 'px';
+        divStyle.width = (constraints.cols * 10) + 'px';
+        divStyle.height = (constraints.rows * 10) + 'px';
+        divStyle.fontSize = 10 + 'px';
+        divStyle.lineHeight = 10 + 'px';
         divStyle.margin = '0px auto';
         divStyle.overflowX = 'hidden';
         divStyle.overflowY = 'hidden';
         divStyle.backgroundColor = this.intToColor(constraints.deathColor);
     }
 
-    initialize(constraints: Stratton.GameOfLife.IConstraints) {
+    initialize(constraints: Stratton.GameOfLife.IGridContraints) {
         this.rebuildReferences(constraints);
     }
 
-    render(state: Int32Array, constraints: Stratton.GameOfLife.IConstraints) {
+    render(state: Int32Array, constraints: Stratton.GameOfLife.IGridContraints) {
         if (this.shouldRebuild(constraints)) {
             return;
         }

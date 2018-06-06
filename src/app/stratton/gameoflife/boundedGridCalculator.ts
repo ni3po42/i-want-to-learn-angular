@@ -14,44 +14,46 @@ export class BoundedGridCalculator {
         {x: -1, y:  1}, {x:  0, y:  1}, {x:  1, y:  1}
     ];
 
-    async tick() {
+    tick(): Promise<void> {
         const nextBuffer = (this.bufferInUse + 1) % 2;
         const source = this.statebuffer[this.bufferInUse];
         const destination = this.statebuffer[nextBuffer];
 
-        for (let index = 0; index < this.dataSize; index++) {
+        for (let index = 0; index < this.getDataSize(); index++) {
             destination[index] = this.calculateCellState(source, index);
         }
         this.bufferInUse = nextBuffer;
         this.generation++;
+        return Promise.resolve();
     }
 
-    async reset() {
-        this.statebuffer = [new Int32Array(this.dataSize), new Int32Array(this.dataSize)];
+    reset(): Promise<void> {
+        this.statebuffer = [new Int32Array(this.getDataSize()), new Int32Array(this.getDataSize())];
+        return Promise.resolve();
     }
 
-    async randomize() {
-        for (let n = 0; n < this.dataSize * .3; n++) {
-            const randomIndex = Math.random() * this.dataSize;
+    randomize(): Promise<void> {
+        for (let n = 0; n < this.getDataSize() * .3; n++) {
+            const randomIndex = Math.random() * this.getDataSize();
             this.statebuffer[this.bufferInUse][randomIndex | 0] = this.constraints.livingColor;
         }
+        return Promise.resolve();
     }
 
-    async getState() {
-        return this.statebuffer[this.bufferInUse];
+    getState(): Promise<Int32Array> {
+        return Promise.resolve(this.statebuffer[this.bufferInUse]);
     }
 
-    async setState(newState: Int32Array) {
-        await this.reset();
-        this.statebuffer[this.bufferInUse] = newState;
+    setState(newState: Int32Array): Promise<Int32Array> {
+        return this.reset().then(() => this.statebuffer[this.bufferInUse] = newState);
     }
 
-    async getConstraints() {
-        return this.constraints;
+    getConstraints(): Promise<Stratton.GameOfLife.IGridContraints> {
+        return Promise.resolve(this.constraints);
     }
 
-    async setConstraints(newConstraints: Stratton.GameOfLife.IGridContraints) {
-        this.constraints = newConstraints;
+    setConstraints(newConstraints: Stratton.GameOfLife.IGridContraints): Promise<Stratton.GameOfLife.IGridContraints> {
+        return Promise.resolve(this.constraints = newConstraints);
     }
 
     private calculateCellState(buffer: Int32Array, index: number): number {
@@ -111,7 +113,7 @@ export class BoundedGridCalculator {
         };
     }
 
-    private get dataSize(): number {
+    private getDataSize(): number {
         return this.constraints.cols * this.constraints.rows;
     }
 }

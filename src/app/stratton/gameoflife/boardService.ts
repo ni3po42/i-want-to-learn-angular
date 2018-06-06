@@ -12,6 +12,7 @@ export class BoardService implements Stratton.GameOfLife.IBoardService {
     gridCalculator: WebWorkerHost<BoundedGridCalculator>;
     generation: number;
     constraints: Stratton.GameOfLife.IConstraints;
+    subGridConstraints: Stratton.GameOfLife.IGridContraints;
 
     constructor(@Inject(InjectToken.IGlobalReference) private globalReference: Stratton.IGlobalReference) {
         this.constraints = {
@@ -21,29 +22,46 @@ export class BoardService implements Stratton.GameOfLife.IBoardService {
             isTorus : true
         };
 
+        this.subGridConstraints = {
+            cols: 32,
+            rows: 32,
+            deathColor: 0x000000,
+            livingColor: 0xFFFFFF,
+            isTorus: false
+        };
+
+        this.gridCalculator = new WebWorkerHost(BoundedGridCalculator);
+        this.gridCalculator.proxy.setConstraints(this.subGridConstraints);
+
         this.reset();
     }
 
-    reset(): void {
-        this.gridCalculator.proxy
+    async reset() {
+        return this.gridCalculator.proxy
             .reset()
             .then(() => this.render());
     }
 
-    randomize(): void {
-        this.gridCalculator.proxy
+    async randomize() {
+        return this.gridCalculator.proxy
             .randomize()
             .then(() => this.render());
     }
 
-    render(): void {
+    async tick() {
+        return this.gridCalculator.proxy
+            .tick();
+    }
+
+    async render() {
         if (this.renderer) {
-            this.gridCalculator.proxy
+            return this.gridCalculator.proxy
                 .getState()
                 .then((state: Int32Array) => {
-                    this.renderer.render(state, this.constraints);
+                    this.renderer.render(state, this.subGridConstraints);
                 });
         }
+        return Promise.reject('No renderer set');
     }
 
     loadFromFile(file: File): Promise<void> {
@@ -61,14 +79,15 @@ export class BoardService implements Stratton.GameOfLife.IBoardService {
                 context.imageSmoothingEnabled = false;
                 context.drawImage(image, 0, 0);
                 const imageData = context.getImageData(0, 0, image.width, image.height);
-
-                await this.gridCalculator.proxy.setConstraints({
+                this.subGridConstraints = {
                     cols : image.width,
                     rows : image.height,
                     deathColor: this.constraints.deathColor,
                     livingColor: this.constraints.livingColor,
                     isTorus: this.constraints.isTorus
-                });
+                };
+
+                await this.gridCalculator.proxy.setConstraints(this.subGridConstraints);
 
                 const state = new Int32Array(image.width * image.height);
 

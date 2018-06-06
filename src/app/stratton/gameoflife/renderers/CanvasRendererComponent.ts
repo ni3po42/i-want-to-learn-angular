@@ -21,14 +21,14 @@ export class CanvasRendererComponent implements AfterViewInit, Stratton.GameOfLi
         this.scratchContext = this.globalReference.document.createElement('canvas').getContext('2d');
     }
 
-    initialize(constraints: Stratton.GameOfLife.IConstraints) {
+    initialize(constraints: Stratton.GameOfLife.IGridContraints) {
         this.scratchContext.canvas.width = constraints.cols;
         this.scratchContext.canvas.height = constraints.rows;
         this.imageData = this.scratchContext.createImageData(constraints.cols, constraints.rows);
     }
 
-    render(state: Int32Array, constraints: Stratton.GameOfLife.IConstraints) {
-        const scale = constraints.cellSizeInPixels;
+    render(state: Int32Array, constraints: Stratton.GameOfLife.IGridContraints) {
+        const scale = 10;
         const ctx = this.context;
         ctx.canvas.width = constraints.cols * scale;
         ctx.canvas.height = constraints.rows * scale;

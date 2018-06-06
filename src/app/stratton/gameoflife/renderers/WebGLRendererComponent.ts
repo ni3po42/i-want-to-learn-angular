@@ -35,7 +35,7 @@ export class WebGlRendererComponent implements Stratton.GameOfLife.IRenderer {
         return this.canvas.context;
     }
 
-    initialize(constraints: Stratton.GameOfLife.IConstraints) {
+    initialize(constraints: Stratton.GameOfLife.IGridContraints) {
 
         this.setUpEvents();
 
@@ -138,7 +138,7 @@ export class WebGlRendererComponent implements Stratton.GameOfLife.IRenderer {
         });
     }
 
-    render(state: Int32Array, constraints: Stratton.GameOfLife.IConstraints) {
+    render(state: Int32Array, constraints: Stratton.GameOfLife.IGridContraints) {
         if (!this.isInitialized) {
             return;
         }

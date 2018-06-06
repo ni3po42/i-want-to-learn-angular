@@ -33,16 +33,17 @@ declare namespace Stratton.GameOfLife {
         constraints: IConstraints;
         renderer: IRenderer;
 
-        reset(): void;
-        randomize(): void;
-        render(): void;
+        reset(): Promise<any>;
+        randomize(): Promise<any>;
+        render(): Promise<any>;
+        tick(): Promise<any>;
 
         loadFromFile(file: File): Promise<void>;
     }
 
     export interface IRenderer {
-        initialize(constraints: IConstraints);
-        render(state: Int32Array, constraints: IConstraints);
+        initialize(constraints: IGridContraints);
+        render(state: Int32Array, constraints: IGridContraints);
     }
 
     export interface IGlslShaderSource {

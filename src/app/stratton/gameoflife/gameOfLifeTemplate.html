@@ -17,8 +17,8 @@
     <label>Surface is a torus</label>
     <input [disabled]="isRunning" type="checkbox" [(ngModel)]="constraintModel.isTorus" (change)="resetGame()" />
 
-    <label>Frame Delay (ms):</label>
-    <input type="number" min="0" max="1000" [(ngModel)]="constraintModel.frameDelay" />
+    <!-- <label>Frame Delay (ms):</label>
+    <input type="number" min="0" max="1000" [(ngModel)]="constraintModel.frameDelay" /> -->
 
     <button (click)="randomize()" [disabled]="isRunning">?</button>
     <button (click)="isRunning ? stopGame() : startGame()">{{isRunning ? '||' : '>'}}</button>

@@ -22,7 +22,6 @@ import { BoardService } from './boardService';
 export class GameOfLifeComponent implements OnDestroy {
 
     isRunning = false;
-    lastRenderTimestamp: number = null;
     renderer: RendererSelectorComponent;
 
     constructor(
@@ -39,7 +38,7 @@ export class GameOfLifeComponent implements OnDestroy {
         component.subscribe((renderer) => {
             const initState = !this.boardService.renderer;
             this.boardService.renderer = renderer;
-            renderer.initialize(this.boardService.constraints);
+            renderer.initialize(this.boardService.subGridConstraints);
             if (initState) {
                this.renderFrame(0);
            }
@@ -50,8 +49,8 @@ export class GameOfLifeComponent implements OnDestroy {
         this.stopGame();
     }
 
-    get constraintModel(): Stratton.GameOfLife.IConstraints {
-        return this.boardService.constraints;
+    get constraintModel(): Stratton.GameOfLife.IGridContraints {
+        return this.boardService.subGridConstraints;
     }
 
     get selectedRendererType(): string {
@@ -82,8 +81,9 @@ export class GameOfLifeComponent implements OnDestroy {
 
     public randomize(): void {
         this.isRunning = false;
-        this.boardService.reset();
-        this.boardService.randomize();
+        this.boardService
+            .reset()
+            .then(() => this.boardService.randomize());
     }
 
     public loadFile(file: File) {
@@ -91,23 +91,19 @@ export class GameOfLifeComponent implements OnDestroy {
         this.boardService
             .loadFromFile(file)
             .then(() => {
-                this.boardService.renderer.initialize(this.boardService.constraints);
+                this.boardService.renderer.initialize(this.boardService.subGridConstraints);
                 this.boardService.render();
             });
     }
 
     private renderFrame(timeStamp): void {
         if (this.isRunning) {
-            this.boardService.tick();
+            this.boardService
+                .tick()
+                .then(() => this.boardService.render())
+                .then(() => this.globalReference.requestAnimationFrame((t) => this.renderFrame(t)))
+                .catch((e) => console.log(e));
         }
-
-        if (this.lastRenderTimestamp === null) {
-            this.lastRenderTimestamp = timeStamp;
-        } else if (timeStamp - this.lastRenderTimestamp > this.constraintModel.frameDelay) {
-            this.lastRenderTimestamp = timeStamp;
-            this.ngZone.run(() => this.boardService.render());
-        }
-        this.globalReference.requestAnimationFrame((t) => this.renderFrame(t));
     }
 }
 
