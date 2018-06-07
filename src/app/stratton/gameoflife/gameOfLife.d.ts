@@ -30,14 +30,11 @@ declare namespace Stratton.GameOfLife {
     }
 
     export interface IBoardService {
-        constraints: IConstraints;
         renderer: IRenderer;
-
         reset(): Promise<any>;
         randomize(): Promise<any>;
         render(): Promise<any>;
         tick(): Promise<any>;
-
         loadFromFile(file: File): Promise<void>;
     }
 
@@ -95,7 +92,8 @@ declare namespace Stratton.GameOfLife {
         //onmessage: (event: MessageEvent) => boolean;
         //onmessageerror: (event: MessageEvent) => boolean;
         //close: () => void;
-        //postMessage: (message: any, transferList?: any[]) => void;
+        postMessage: (message: any, transferList?: any[]) => void;
+        addEventListener: (type: string, listener: (e:MessageEvent) => void, options?: any) => void;
         //importScripts: (...args: string[]) => void;
     }
 }

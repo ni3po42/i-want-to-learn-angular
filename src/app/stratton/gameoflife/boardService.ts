@@ -9,18 +9,12 @@ import { async } from '@angular/core/testing';
 export class BoardService implements Stratton.GameOfLife.IBoardService {
 
     renderer: Stratton.GameOfLife.IRenderer;
-    gridCalculator: WebWorkerHost<BoundedGridCalculator>;
+    gridCalculatorHost: WebWorkerHost<BoundedGridCalculator>;
+    gridCalculator: BoundedGridCalculator;
     generation: number;
-    constraints: Stratton.GameOfLife.IConstraints;
     subGridConstraints: Stratton.GameOfLife.IGridContraints;
 
     constructor(@Inject(InjectToken.IGlobalReference) private globalReference: Stratton.IGlobalReference) {
-        this.constraints = {
-            frameDelay: 50,
-            deathColor : 0x000000,
-            livingColor : 0xFFFFFF,
-            isTorus : true
-        };
 
         this.subGridConstraints = {
             cols: 32,
@@ -30,38 +24,32 @@ export class BoardService implements Stratton.GameOfLife.IBoardService {
             isTorus: false
         };
 
-        this.gridCalculator = new WebWorkerHost(BoundedGridCalculator);
-        this.gridCalculator.proxy.setConstraints(this.subGridConstraints);
+        this.gridCalculatorHost = new WebWorkerHost(BoundedGridCalculator);
+        this.gridCalculator = this.gridCalculatorHost.proxy;
+        this.gridCalculator.setConstraints(this.subGridConstraints);
 
         this.reset();
     }
 
     async reset() {
-        return this.gridCalculator.proxy
-            .reset()
-            .then(() => this.render());
+        await this.gridCalculator.reset();
+        this.render();
     }
 
     async randomize() {
-        return this.gridCalculator.proxy
-            .randomize()
-            .then(() => this.render());
+        await this.gridCalculator.randomize();
+        this.render();
     }
 
     async tick() {
-        return this.gridCalculator.proxy
-            .tick();
+        await this.gridCalculator.tick();
     }
 
     async render() {
         if (this.renderer) {
-            return this.gridCalculator.proxy
-                .getState()
-                .then((state: Int32Array) => {
-                    this.renderer.render(state, this.subGridConstraints);
-                });
+            const state = await this.gridCalculator.getState();
+            this.renderer.render(state, this.subGridConstraints);
         }
-        return Promise.reject('No renderer set');
     }
 
     loadFromFile(file: File): Promise<void> {
@@ -79,15 +67,11 @@ export class BoardService implements Stratton.GameOfLife.IBoardService {
                 context.imageSmoothingEnabled = false;
                 context.drawImage(image, 0, 0);
                 const imageData = context.getImageData(0, 0, image.width, image.height);
-                this.subGridConstraints = {
-                    cols : image.width,
-                    rows : image.height,
-                    deathColor: this.constraints.deathColor,
-                    livingColor: this.constraints.livingColor,
-                    isTorus: this.constraints.isTorus
-                };
+                this.subGridConstraints.cols = image.width;
+                this.subGridConstraints.rows = image.height;
 
-                await this.gridCalculator.proxy.setConstraints(this.subGridConstraints);
+                await this.gridCalculator.setConstraints(this.subGridConstraints);
+                await this.gridCalculator.reset();
 
                 const state = new Int32Array(image.width * image.height);
 
@@ -97,8 +81,8 @@ export class BoardService implements Stratton.GameOfLife.IBoardService {
                     state[n / 4 | 0] = color;
                 }
 
-                await this.gridCalculator.proxy.setState(state);
-                await this.gridCalculator.proxy.reset();
+                await this.gridCalculator.setState(state);
+
                 resolve();
             };
 

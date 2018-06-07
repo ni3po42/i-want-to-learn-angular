@@ -68,6 +68,7 @@ export class GameOfLifeComponent implements OnDestroy {
 
     public startGame(): void {
         this.isRunning = true;
+        this.globalReference.requestAnimationFrame((t) => this.renderFrame(t));
     }
 
     public stopGame(): void {

@@ -8,73 +8,75 @@ export class WebWorkerHost<T extends object> {
     private workerProxyHandler: ProxyHandler<any>;
     readonly proxy: T;
     private readonly workerProxyMethodDictionary: {[methodName: string]: (...args: any[]) => any};
-    private promiseTracker: {[methodName: string]: {[id: number]: (arg: any) => void} };
+    private promiseTracker: {[methodName: string]: {[id: number]: {resolve: (arg: any) => void, reject: (arg: any) => void}} };
     private messageId: number;
 
     constructor(private classDef: new (context?: Stratton.GameOfLife.DedicatedWorkerGlobalScope) => T) {
-        const emptyObj = {};
 
         this.promiseTracker = {};
         this.messageId = 1;
 
-        const kernelMethods = Object
-            .entries(classDef.prototype)
-            .filter(val => val && val[1] && emptyObj.toString.call(val[1]) === '[object Function]')
-            .map(x => `kernel['${x[0]}'] = (${x[1]}).bind(kernel)`)
-            .join(';');
+        function webworkerMainMethod(
+            context: Stratton.GameOfLife.DedicatedWorkerGlobalScope,
+            classDefParam,
+            classDefMethodsParam: {[name: string]: Function}) {
 
-        const blob = new Blob([
-            `"use strict";
-            (function(context){
-                var classDef = ${classDef};
-                var kernel = new Proxy({}, {
-                    set : function(obj, prop, value){
-                        obj[prop] = value;
-                        try {
-                            var payload = JSON.parse(JSON.stringify({member:prop, value: value}));
-                            context.postMessage(payload);
-                        }catch(e) {
-                            console.log(e);
-                        }
-                        return true;
+            const kernel = new Proxy({}, {
+                set : (obj, prop, value) => {
+                    obj[prop] = value;
+                    // gets around ownership issues, just force a full cloning
+                    const payload = JSON.parse(JSON.stringify({member: prop, value: value}));
+                    context.postMessage(payload);
+                    return true;
+                }
+            });
+
+            for (const member in classDefMethodsParam) {
+                if (classDefMethodsParam[member]) {
+                    kernel[member] = classDefMethodsParam[member].bind(kernel);
+                }
+            }
+
+            context.addEventListener('message', e => {
+                if (e.data && e.data[0] && e.data[1] && kernel[e.data[0]]) {
+                    const name = e.data[0];
+                    const mId = e.data[1];
+                    const args = e.data.slice(2);
+                    try {
+                        const val = kernel[name].apply(kernel, args);
+                        Promise.resolve(val)
+                            .then(v => context.postMessage({member: name, value: v, mId: mId}))
+                            .catch((err) => context.postMessage({member: name, mId: mId, errorMsg: err}));
+                    } catch (ex) {
+                        context.postMessage({member: name, mId: mId, errorMsg: ex});
                     }
-                });
-                ${kernelMethods};
-                context.addEventListener("message", function(e){
-                    if (kernel && e && e.data && e.data[0] && e.data[1] && kernel[e.data[0]]){
-                        var name = e.data[0];
-                        var mId = e.data[1];
-                        var args = e.data.slice(2);
-                        var val = kernel[name].apply(kernel, args);
-                        if (val && val.then && val.catch && val.finally){
-                            val.then(function(v){
-                                context.postMessage({member:name, value: v, mId:mId});
-                            });
-                        } else {
-                            context.postMessage({member:name, value: val, mId:mId});
-                        }
-                    }
-                });
-                classDef.call(kernel, context);
-            })(self);
-            `
-        ], {type: 'application/javascript'});
+                }
+            });
+            classDefParam.call(kernel, context);
+        }
+
+        const classDefMethods = Object.entries(classDef.prototype)
+            .filter(x => x[1] instanceof Function)
+            .map(x => `"${x[0]}":${x[1]}`)
+            .join(',');
+
+        const blob = new Blob(
+            [`"use strict";(${webworkerMainMethod})(self, ${classDef}, {${classDefMethods}});`],
+            {type: 'application/javascript'});
+
         const blobUrl = URL.createObjectURL(blob);
         this.worker = new Worker(blobUrl);
 
         this.worker.onmessage = (e) => {
             if (e && e.data && e.data.member && e.data.mId) {
                 if (this.promiseTracker[e.data.member] && this.promiseTracker[e.data.member][e.data.mId]) {
-                    const resolve = this.promiseTracker[e.data.member][e.data.mId];
                     const member = this.promiseTracker[e.data.member];
+                    const track = member[e.data.mId];
+                    const func = e.data.errorMsg ? track.reject : track.resolve;
                     delete member[e.data.mId];
-                    resolve(e.data.value);
+                    func(e.data.errorMsg || e.data.value);
                 }
             }
-        };
-
-        this.worker.onerror = (e) => {
-            // todo: implement error handling
         };
 
         this.workerProxyMethodDictionary = {};
@@ -87,11 +89,14 @@ export class WebWorkerHost<T extends object> {
                         const mId = host.messageId++;
                         const args = Array.from(arguments);
                         host.worker.postMessage([member, mId].concat(args));
-                        return new Promise((resolve) => {
+                        return new Promise((resolve, reject) => {
                             if (!host.promiseTracker[member]) {
                                 host.promiseTracker[member] = {};
                             }
-                            host.promiseTracker[member][mId] = resolve;
+                            host.promiseTracker[member][mId] = {
+                                resolve : resolve,
+                                reject : reject
+                            };
                         });
                     };
                 }
