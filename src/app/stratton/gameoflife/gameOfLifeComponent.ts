@@ -1,6 +1,6 @@
 import {
     Component, OnInit, ElementRef, ViewChild,
-    OnDestroy, NgZone, InjectionToken, Inject, AfterViewInit, QueryList } from '@angular/core';
+    OnDestroy, InjectionToken, Inject, AfterViewInit, QueryList } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 
 import { RendererSelectorComponent, GameOfLifeRendererEnum } from './renderers/RenderSelectorComponent';
@@ -8,7 +8,6 @@ import { RendererSelectorComponent, GameOfLifeRendererEnum } from './renderers/R
 import { InjectToken} from './gameOfLife.injection';
 
 import { WebWorkerHost } from './webWorkerHost';
-import { ExampleActivity } from './exampleActivity';
 
 //
 import { BoardService } from './boardService';
@@ -17,7 +16,14 @@ import { BoardService } from './boardService';
 @Component({
     selector: 'app-game-of-life',
     templateUrl: './gameOfLifeTemplate.html',
-    styles: [':host { background-color: #000000']
+    styles: [':host { background-color: #000000'],
+    providers: [
+        {
+            provide: InjectToken.IGlobalReference,
+            useValue: window
+        },
+        BoardService
+    ]
 })
 export class GameOfLifeComponent implements OnDestroy {
 
@@ -27,8 +33,7 @@ export class GameOfLifeComponent implements OnDestroy {
     constructor(
         // @Inject(InjectToken.IBoardService) private boardService: Stratton.GameOfLife.IBoardService,
         private boardService: BoardService,
-        @Inject(InjectToken.IGlobalReference) private globalReference: Stratton.IGlobalReference,
-        private ngZone: NgZone
+        @Inject(InjectToken.IGlobalReference) private globalReference: Stratton.IGlobalReference
     ) {
        }
 

@@ -31,6 +31,7 @@ declare namespace Stratton.GameOfLife {
 
     export interface IBoardService {
         renderer: IRenderer;
+        subGridConstraints: IGridContraints;
         reset(): Promise<any>;
         randomize(): Promise<any>;
         render(): Promise<any>;

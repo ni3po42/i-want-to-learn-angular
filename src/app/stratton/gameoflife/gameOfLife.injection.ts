@@ -1,6 +1,6 @@
 import { InjectionToken } from '@angular/core';
 
-export function _<T>(name): InjectionToken<T> {
+export function _<T>(name: string) {
     return new InjectionToken<T>(name);
 }
 

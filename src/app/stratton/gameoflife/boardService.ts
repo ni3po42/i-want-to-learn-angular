@@ -3,7 +3,6 @@ import { Injectable, Inject } from '@angular/core';
 import { InjectToken} from './gameOfLife.injection';
 import { WebWorkerHost } from './webWorkerHost';
 import { BoundedGridCalculator } from './boundedGridCalculator';
-import { async } from '@angular/core/testing';
 
 @Injectable()
 export class BoardService implements Stratton.GameOfLife.IBoardService {
@@ -26,7 +25,7 @@ export class BoardService implements Stratton.GameOfLife.IBoardService {
 
         this.gridCalculatorHost = new WebWorkerHost(BoundedGridCalculator);
         this.gridCalculator = this.gridCalculatorHost.proxy;
-        this.gridCalculator.setConstraints(this.subGridConstraints);
+        this.gridCalculator.constraints = this.subGridConstraints;
 
         this.reset();
     }
@@ -47,7 +46,7 @@ export class BoardService implements Stratton.GameOfLife.IBoardService {
 
     async render() {
         if (this.renderer) {
-            const state = await this.gridCalculator.getState();
+            const state = this.gridCalculator.state;
             this.renderer.render(state, this.subGridConstraints);
         }
     }
@@ -70,8 +69,7 @@ export class BoardService implements Stratton.GameOfLife.IBoardService {
                 this.subGridConstraints.cols = image.width;
                 this.subGridConstraints.rows = image.height;
 
-                await this.gridCalculator.setConstraints(this.subGridConstraints);
-                await this.gridCalculator.reset();
+                this.gridCalculator.constraints = this.subGridConstraints;
 
                 const state = new Int32Array(image.width * image.height);
 
@@ -81,7 +79,7 @@ export class BoardService implements Stratton.GameOfLife.IBoardService {
                     state[n / 4 | 0] = color;
                 }
 
-                await this.gridCalculator.setState(state);
+                this.gridCalculator.state = state;
 
                 resolve();
             };

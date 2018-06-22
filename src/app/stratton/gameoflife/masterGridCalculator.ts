@@ -1,10 +1,10 @@
 /* tslint:disable:no-bitwise */
 
-export class BoundedGridCalculator {
+export class MasterGridCalculator {
     constructor() {   }
 
-    private _constraints: Stratton.GameOfLife.IGridContraints;
-    private statebuffer: Int32Array[] = [];
+    private constraints: Stratton.GameOfLife.IGridContraints;
+    private statebuffer: Int32Array[];
     private bufferInUse = 0;
     private generation: number;
 
@@ -35,42 +35,41 @@ export class BoundedGridCalculator {
     randomize(): Promise<void> {
         for (let n = 0; n < this.getDataSize() * .3; n++) {
             const randomIndex = Math.random() * this.getDataSize();
-            this.statebuffer[this.bufferInUse][randomIndex | 0] = this._constraints.livingColor;
+            this.statebuffer[this.bufferInUse][randomIndex | 0] = this.constraints.livingColor;
         }
         return Promise.resolve();
     }
 
-    get state(): Int32Array {
-        return this.statebuffer[this.bufferInUse];
+    getState(): Promise<Int32Array> {
+        return Promise.resolve(this.statebuffer[this.bufferInUse]);
     }
 
-    set state(newState: Int32Array) {
-        this.reset().then(() => this.statebuffer[this.bufferInUse] = newState);
+    setState(newState: Int32Array): Promise<Int32Array> {
+        return this.reset().then(() => this.statebuffer[this.bufferInUse] = newState);
     }
 
-    get constraints(): Stratton.GameOfLife.IGridContraints {
-        return this._constraints;
+    getConstraints(): Promise<Stratton.GameOfLife.IGridContraints> {
+        return Promise.resolve(this.constraints);
     }
 
-    set constraints(newConstraints: Stratton.GameOfLife.IGridContraints) {
-        this._constraints = newConstraints;
-        this.reset();
+    setConstraints(newConstraints: Stratton.GameOfLife.IGridContraints): Promise<Stratton.GameOfLife.IGridContraints> {
+        return Promise.resolve(this.constraints = newConstraints);
     }
 
     private calculateCellState(buffer: Int32Array, index: number): number {
-        const cellIsCurrentlyAlive = buffer[index] !== this._constraints.deathColor;
+        const cellIsCurrentlyAlive = buffer[index] !== this.constraints.deathColor;
         const livingNeighbourData = this.getLiveData(buffer, index);
         const livingNeighbourCount = livingNeighbourData.count;
         const nextGenIsAlive = cellIsCurrentlyAlive
         ? livingNeighbourCount === 2 || livingNeighbourCount === 3
         : livingNeighbourCount === 3;
 
-        return nextGenIsAlive ? livingNeighbourData.color : this._constraints.deathColor;
+        return nextGenIsAlive ? livingNeighbourData.color : this.constraints.deathColor;
     }
 
     private getLiveData(buffer: Int32Array, index: number): {count: number, color: number} {
-        const x = index % this._constraints.cols;
-        const y = index / this._constraints.cols | 0;
+        const x = index % this.constraints.cols;
+        const y = index / this.constraints.cols | 0;
 
         const sparseArray = this.neighbours.reduce((acc, point) => {
             // const dx = point.x + x;
@@ -78,16 +77,16 @@ export class BoundedGridCalculator {
             let dx = point.x + x;
             let dy = point.y + y;
 
-            if (this._constraints.isTorus) {
-                dx = (dx + this._constraints.cols) % this._constraints.cols;
-                dy = (dy + this._constraints.rows) % this._constraints.rows;
+            if (this.constraints.isTorus) {
+                dx = (dx + this.constraints.cols) % this.constraints.cols;
+                dy = (dy + this.constraints.rows) % this.constraints.rows;
             }
 
-            if (dx >= 0 && dx < this._constraints.cols &&
-                dy >= 0 && dy < this._constraints.rows) {
-                    const neighbourIndex = dy * this._constraints.cols + dx;
+            if (dx >= 0 && dx < this.constraints.cols &&
+                dy >= 0 && dy < this.constraints.rows) {
+                    const neighbourIndex = dy * this.constraints.cols + dx;
                     const id = buffer[neighbourIndex];
-                    if (id !== this._constraints.deathColor) {
+                    if (id !== this.constraints.deathColor) {
                         if (!(id in acc)) {
                             acc[id] = 0;
                         }
@@ -101,11 +100,11 @@ export class BoundedGridCalculator {
         const sorted = Object.entries<number>(sparseArray).sort((a, b) => b[1] - a[1]);
         let color: number;
         if (sorted.length === 0) {
-            color = this._constraints.deathColor;
+            color = this.constraints.deathColor;
         } else if (sorted.length === 1 || sorted[0][1] > sorted[1][1]) {
             color = Number(sorted[0][0]);
         } else {
-            color = this._constraints.livingColor;
+            color = this.constraints.livingColor;
         }
 
         return {
@@ -115,9 +114,6 @@ export class BoundedGridCalculator {
     }
 
     private getDataSize(): number {
-        if (!this._constraints) {
-            return 0;
-        }
-        return this._constraints.cols * this._constraints.rows;
+        return this.constraints.cols * this.constraints.rows;
     }
 }
